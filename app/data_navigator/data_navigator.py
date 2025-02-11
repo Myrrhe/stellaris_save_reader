@@ -18,23 +18,30 @@ class DataNavigator:
 
     def ls(self, path: Optional[str] = None) -> None:
         """Displays dictionary keys or list indices."""
-        if isinstance(self.current, dict):
-            _logger.info("  ".join(self.current.keys()))
-        elif isinstance(self.current, list):
-            _logger.info("  ".join(str(i) for i in range(len(self.current))))
-        else:
-            _logger.info("Valeur: %s", self.current)
+
+        navigation: Optional[tuple[Any, list[str], list[dict[str, Any]]]] = (
+            self.navigate_to(path.split("/"))
+        )
+        if navigation:
+            current: Any = navigation[0]
+            if isinstance(current, dict):
+                _logger.info("  ".join(current.keys()))
+            elif isinstance(current, list):
+                _logger.info("  ".join(str(i) for i in range(len(current))))
+            else:
+                _logger.info("Valeur: %s", current)
 
     def get_path(self) -> str:
         """Returns the absolute path as a string."""
         return "/".join(self.path).replace("//", "/")
 
-    def navigate_to(self, path_parts: list[str]) -> None:
+    def navigate_to(
+        self, path_parts: list[str]
+    ) -> Optional[tuple[Any, list[str], list[dict[str, Any]]]]:
         """Try to navigate to the path given in the key list."""
         # Starts at root if ‘/’.
         node = self.root if path_parts[0] == "" else self.current
         new_path = ["/"] if path_parts[0] == "" else self.path[:]
-        # Save for rollback if error
         history_snapshot = self.history[:]
 
         for key in path_parts:
@@ -44,39 +51,41 @@ class DataNavigator:
             if key == "..":
                 # Does not go beyond the root
                 if len(new_path) > 1:
-                    node = self.history.pop()
+                    node = history_snapshot.pop()
                     new_path.pop()
                 continue
             if isinstance(node, dict) and key in node:
-                self.history.append(node)
+                history_snapshot.append(node)
                 node = node[key]
                 new_path.append(key)
             elif isinstance(node, list):
                 try:
                     index = int(key)
                     if 0 <= index < len(node):
-                        self.history.append(node)
+                        history_snapshot.append(node)
                         node = node[index]
                         new_path.append(str(index))
                     else:
-                        _logger.error("Index %d hors limites.", index)
-                        self.history = history_snapshot
-                        return
+                        _logger.critical("Index %d hors limites.", index)
+                        return None
                 except ValueError:
-                    _logger.error("'%s' n'est pas un index valide.", key)
-                    self.history = history_snapshot
-                    return
+                    _logger.critical("'%s' n'est pas un index valide.", key)
+                    return None
             else:
-                _logger.error("'%s' n'existe pas dans la structure.", key)
-                self.history = history_snapshot
-                return
+                _logger.critical("'%s' n'existe pas dans la structure.", key)
+                return None
 
-        self.current = node
-        self.path = new_path
+        return node, new_path, history_snapshot
 
     def cd(self, path: str) -> None:
         """Change directory in data structure."""
-        self.navigate_to(path.split("/"))
+        navigation: Optional[tuple[Any, list[str], list[dict[str, Any]]]] = (
+            self.navigate_to(path.split("/"))
+        )
+        if navigation:
+            self.current = navigation[0]
+            self.path = navigation[1]
+            self.history = navigation[2]
 
     @staticmethod
     def clear() -> None:
@@ -90,7 +99,7 @@ class DataNavigator:
             if not cmd:
                 continue
             if cmd[0] == "ls":
-                self.ls(cmd[1] if len(cmd) > 1 else None)
+                self.ls(cmd[1] if len(cmd) > 1 else ".")
             elif cmd[0] == "cd":
                 self.cd(cmd[1] if len(cmd) > 1 else "..")
             elif cmd[0] == "clear":
