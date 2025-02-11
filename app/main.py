@@ -51,8 +51,8 @@ def main(*_, **__) -> int | str | None:
         data = FileParser(file_path).parse_large_file_character_by_character(
             progress, task
         )
-    with open("../logs/gamestate_parsed", "w", encoding="ascii") as file:
-        json.dump(data, file, ensure_ascii=True, indent=4)
+    # with open("../logs/gamestate_parsed", "w", encoding="ascii") as file:
+    #     json.dump(data, file, ensure_ascii=True, indent=4)
     navigator: DataNavigator = DataNavigator(data)
     res = navigator.run()
     return res

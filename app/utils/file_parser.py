@@ -86,10 +86,11 @@ class FileParser:
             while True:
                 # W read one character
                 char = f.read(1)
-                progress.update(task, advance=1)
                 # End of file
                 if not char:
                     break
+
+                progress.update(task, advance=1)
 
                 # Begining or end of string
                 if char == '"':

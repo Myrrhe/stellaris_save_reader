@@ -44,7 +44,7 @@ class DataNavigator:
             if key == "..":
                 # Does not go beyond the root
                 if len(new_path) > 1:
-                    self.history.pop()
+                    node = self.history.pop()
                     new_path.pop()
                 continue
             if isinstance(node, dict) and key in node:
