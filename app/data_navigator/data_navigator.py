@@ -2,6 +2,7 @@
 """ A class to navigate a data structure. """
 
 import logging
+import readline
 from typing import Any, Optional
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -92,8 +93,32 @@ class DataNavigator:
         """Cleans the console."""
         _logger.info("\033c")
 
+    def complete_path(self, text: str, state: int) -> Optional[list[str]]:
+        """Complète automatiquement les noms de clés lors de la saisie de commandes."""
+        path_prefix = text.rsplit("/", 1)[0] if "/" in text else ""
+        partial_key = text.rsplit("/", 1)[-1]
+
+        node: Any = self.current
+        if path_prefix:
+            navigation: Optional[tuple[Any, list[str], list[dict[str, Any]]]] = (
+                self.navigate_to(path_prefix)
+            )
+            if navigation:
+                node = navigation[0]
+
+        if isinstance(node, dict):
+            options: list[str] = [k for k in node.keys() if k.startswith(partial_key)]
+            return options[state] if state < len(options) else None
+        return None
+
+    def setup_autocomplete(self) -> None:
+        """Configure l'autocomplétion avec la touche Tab."""
+        readline.set_completer(self.complete_path)
+        readline.parse_and_bind("tab: complete")
+
     def run(self) -> int:
         """Main navigation loop."""
+        self.setup_autocomplete()
         while True:
             cmd = input(f"📂 {self.get_path()} > ").strip().split(maxsplit=1)
             if not cmd:
@@ -107,5 +132,5 @@ class DataNavigator:
             elif cmd[0] == "exit":
                 break
             else:
-                _logger.info("Commandes disponibles: ls, cd <clé|index>, cd .., exit")
+                _logger.info("Commandes disponibles: ls, cd <chemin>, exit")
         return 0
