@@ -24,7 +24,7 @@ class DataNavigator:
             self.navigate_to(path.split("/"))
         )
         if navigation:
-            current: Any = navigation[0]
+            current: str | dict | list = navigation[0]
             if isinstance(current, dict):
                 _logger.info("  ".join(current.keys()))
             elif isinstance(current, list):
@@ -44,6 +44,7 @@ class DataNavigator:
         node = self.root if path_parts[0] == "" else self.current
         new_path = ["/"] if path_parts[0] == "" else self.path[:]
         history_snapshot = self.history[:]
+        ko: bool = False
 
         for key in path_parts:
             if key in ("", "."):
@@ -68,25 +69,28 @@ class DataNavigator:
                         new_path.append(str(index))
                     else:
                         _logger.critical("Index %d hors limites.", index)
-                        return None
+                        ko = True
+                        break
                 except ValueError:
                     _logger.critical("'%s' n'est pas un index valide.", key)
-                    return None
+                    ko = True
+                    break
             else:
                 _logger.critical("'%s' n'existe pas dans la structure.", key)
-                return None
+                ko = True
+                break
 
-        return node, new_path, history_snapshot
+        return None if ko else (node, new_path, history_snapshot)
 
     def cd(self, path: str) -> None:
         """Change directory in data structure."""
-        navigation: Optional[tuple[Any, list[str], list[dict[str, Any]]]] = (
+        nav: Optional[tuple[Any, list[str], list[dict[str, Any]]]] = (
             self.navigate_to(path.split("/"))
         )
-        if navigation:
-            self.current = navigation[0]
-            self.path = navigation[1]
-            self.history = navigation[2]
+        if nav:
+            self.current = nav[0]
+            self.path = nav[1]
+            self.history = nav[2]
 
     @staticmethod
     def clear() -> None:
@@ -94,20 +98,21 @@ class DataNavigator:
         _logger.info("\033c")
 
     def complete_path(self, text: str, state: int) -> Optional[list[str]]:
-        """Complète automatiquement les noms de clés lors de la saisie de commandes."""
-        path_prefix = text.rsplit("/", 1)[0] if "/" in text else ""
-        partial_key = text.rsplit("/", 1)[-1]
+        """Automatically completes key names when typing."""
+        path_prefix: str = text.rsplit("/", 1)[0] if "/" in text else ""
+        key: str = text.rsplit("/", 1)[-1]
 
-        node: Any = self.current
+        node: dict[str, Any] = self.current
+
         if path_prefix:
-            navigation: Optional[tuple[Any, list[str], list[dict[str, Any]]]] = (
+            nav: Optional[tuple[Any, list[str], list[dict[str, Any]]]] = (
                 self.navigate_to(path_prefix)
             )
-            if navigation:
-                node = navigation[0]
+            if nav:
+                node = nav[0]
 
         if isinstance(node, dict):
-            options: list[str] = [k for k in node.keys() if k.startswith(partial_key)]
+            options: list[str] = [k for k in node.keys() if k.startswith(key)]
             return options[state] if state < len(options) else None
         return None
 
@@ -123,14 +128,22 @@ class DataNavigator:
             cmd = input(f"📂 {self.get_path()} > ").strip().split(maxsplit=1)
             if not cmd:
                 continue
-            if cmd[0] == "ls":
-                self.ls(cmd[1] if len(cmd) > 1 else ".")
-            elif cmd[0] == "cd":
-                self.cd(cmd[1] if len(cmd) > 1 else "..")
-            elif cmd[0] == "clear":
-                self.clear()
-            elif cmd[0] == "exit":
+            code_run = self.process_input(cmd)
+            if code_run == 1:
                 break
-            else:
-                _logger.info("Commandes disponibles: ls, cd <chemin>, exit")
         return 0
+
+    def process_input(self, cmd: list[str]) -> int:
+        """Process the command during the execution."""
+        res = 0
+        if cmd[0] == "ls":
+            self.ls(cmd[1] if len(cmd) > 1 else ".")
+        elif cmd[0] == "cd":
+            self.cd(cmd[1] if len(cmd) > 1 else "..")
+        elif cmd[0] == "clear":
+            self.clear()
+        elif cmd[0] == "exit" or cmd[0] == "q":
+            res = 1
+        else:
+            _logger.info("Commandes disponibles: ls, cd <chemin>, exit")
+        return res

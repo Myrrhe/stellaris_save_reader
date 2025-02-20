@@ -15,7 +15,7 @@ class FileParser:
     def __init__(self, file_path: str) -> None:
         self.file_path = file_path
         self.stack = [(None, {})]
-        self.current_key = None
+        self.curr_key = None
         self.in_string = False
         self.buffer = []
         self.just_saw_separator = False
@@ -23,11 +23,13 @@ class FileParser:
     def process_word(self) -> None:
         """Process one word."""
         if self.buffer:
-            if self.current_key is not None:
-                self.stack[-1][1][self.current_key] = "".join(self.buffer).strip()
+            if isinstance(self.stack[-1][1], list):
+                self.stack[-1][1].append("".join(self.buffer).strip())
+            elif self.curr_key is not None:
+                self.stack[-1][1][self.curr_key] = "".join(self.buffer).strip()
                 self.buffer.clear()
                 # Reset after affectation
-                self.current_key = None
+                self.curr_key = None
             else:
                 self.turn_dict_to_list("".join(self.buffer).strip())
             self.buffer.clear()
@@ -35,12 +37,12 @@ class FileParser:
     def add_container(self) -> None:
         """Add a container to the stack."""
         new_container = {}
-        if self.current_key is None:
+        if self.curr_key is None:
             self.turn_dict_to_list(new_container)
         else:
-            self.stack[-1][1][self.current_key] = new_container
-        self.stack.append((self.current_key, new_container))
-        self.current_key = None
+            self.stack[-1][1][self.curr_key] = new_container
+        self.stack.append((self.curr_key, new_container))
+        self.curr_key = None
 
     def turn_dict_to_list(self, new_element: str | dict[str, Any]) -> None:
         """Turn a dict into a list."""
@@ -102,7 +104,7 @@ class FileParser:
 
                 # Key detection
                 elif char == "=":
-                    self.current_key = "".join(self.buffer).strip()
+                    self.curr_key = "".join(self.buffer).strip()
                     self.buffer.clear()
                     self.just_saw_separator = False
 
