@@ -49,7 +49,7 @@ def main(*_, **__) -> int | str | None:
         data = FileParser(file_path).parse_large_file_character_by_character(
             progress, task
         )
-    with open("logs/data.json", "w", encoding="utf-8") as f:
+    with open("../logs/data.json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
     navigator: DataNavigator = DataNavigator(data)
     res = navigator.run()
