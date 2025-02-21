@@ -2,7 +2,7 @@
 """ A file parser. """
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from rich.progress import Progress, TaskID
 
@@ -52,7 +52,6 @@ class FileParser:
                 tmp_key = -1
             self.stack[-2][1][tmp_key] = [new_element]
             self.stack[-1] = (tmp_key, self.stack[-2][1][tmp_key])
-            # self.stack[-1][1].append(new_element)
 
     def process_quote(self) -> None:
         """Process the " caracter."""
@@ -67,7 +66,7 @@ class FileParser:
 
     def word_end(self, case: str, char: str = "") -> None:
         """Process the end of a word."""
-        if self.just_saw_separator:
+        if self.just_saw_separator or case == "END_BLOCK":
             self.process_word()
         match case:
             case "START_BLOCK":
@@ -81,7 +80,9 @@ class FileParser:
         self.just_saw_separator = False
 
     def parse_large_file_character_by_character(
-        self, progress: Progress, task: TaskID
+        self,
+        progress: Optional[Progress] = None,
+        task: Optional[TaskID] = None,
     ) -> dict[str, Any]:
         """Parse a large file."""
         with open(self.file_path, "r", encoding="utf-8") as f:
@@ -92,7 +93,8 @@ class FileParser:
                 if not char:
                     break
 
-                progress.update(task, advance=1)
+                # if progress is not None and task is not None:
+                #     progress.update(task, advance=1)
 
                 # Begining or end of string
                 if char == '"':
