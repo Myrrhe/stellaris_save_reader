@@ -1,7 +1,10 @@
 """ Tests for the args handler methods. """
 
+import logging
 import unittest
 from args_handler import ArgsHandler
+
+logging.disable(logging.CRITICAL)
 
 
 class TestArgsHandler(unittest.TestCase):
@@ -14,4 +17,5 @@ class TestArgsHandler(unittest.TestCase):
             handler.get_usage(), "usage: execution.py [-h] [file]"
         )
         self.assertEqual(str(handler), "[file: machin]")
-        handler = ArgsHandler("machin", "truc")
+        with self.assertRaises(SystemExit):
+            ArgsHandler("machin", "truc")

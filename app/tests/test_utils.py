@@ -1,8 +1,14 @@
 """ Tests for the utils methods. """
 
+import logging
 import unittest
+
+from rich.progress import Progress, TaskID
+
 from utils.utils import count_char_line_file
 from utils import FileParser
+
+logging.disable(logging.CRITICAL)
 
 
 class TestUtils(unittest.TestCase):
@@ -16,9 +22,14 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(nb_line, 5)
         self.assertEqual(nb_char, 18)
 
-        data = FileParser(
-            "app/tests/files/gamestate_short"
-        ).parse_large_file_character_by_character()
+        data = {}
+        with Progress(disable=True) as progress:
+            task: TaskID = progress.add_task("")
+            file_parser = FileParser("app/tests/files/gamestate_short")
+            file_parser.word_end("MACHIN")
+            data = file_parser.parse_large_file_character_by_character(
+                progress, task
+            )
         self.assertIsInstance(data, dict)
         self.assertIn("a", data)
         self.assertIsInstance(data["a"], list)

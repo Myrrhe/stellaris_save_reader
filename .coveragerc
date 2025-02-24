@@ -2,9 +2,10 @@
 branch=True
 # A False value for timid can infortunately cause issues
 timid=False
-source = app
+source = tests
 omit =
     app/tests/*
+    app/main.py
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -26,5 +27,11 @@ exclude_lines =
 
     # Don't complain about abstract methods, they aren't run:
     @(abc\.)?abstractmethod
+
+[html]
+directory = htmlcov
+
+[tool:pytest]
+addopts = --cov=app --cov-report=html
 
 ignore_errors = True

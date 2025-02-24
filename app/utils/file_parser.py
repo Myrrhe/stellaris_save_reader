@@ -93,8 +93,7 @@ class FileParser:
                 if not char:
                     break
 
-                # if progress is not None and task is not None:
-                #     progress.update(task, advance=1)
+                progress.update(task, advance=1)
 
                 # Begining or end of string
                 if char == '"':

@@ -17,20 +17,22 @@ class DataNavigator:
         self.history = []
         self.path = ["/"]
 
-    def ls(self, path: Optional[str] = None) -> None:
+    def ls(self, path: Optional[str] = None) -> str:
         """Displays dictionary keys or list indices."""
 
+        res = ""
         navigation: Optional[tuple[Any, list[str], list[dict[str, Any]]]] = (
             self.navigate_to(path.split("/"))
         )
         if navigation:
             current: str | dict | list = navigation[0]
             if isinstance(current, dict):
-                _logger.info("  ".join(current.keys()))
+                res = "  ".join(current.keys())
             elif isinstance(current, list):
-                _logger.info("  ".join(str(i) for i in range(len(current))))
+                res = "  ".join(str(i) for i in range(len(current)))
             else:
-                _logger.info("Valeur: %s", current)
+                res = f"Valeur: {current}"
+        return res
 
     def get_path(self) -> str:
         """Returns the absolute path as a string."""
@@ -99,7 +101,9 @@ class DataNavigator:
 
     def complete_path(self, text: str, state: int) -> Optional[list[str]]:
         """Automatically completes key names when typing."""
-        path_prefix: str = text.rsplit("/", 1)[0] if "/" in text else ""
+        path_prefix: list[str] = (
+            text.rsplit("/", 1)[:-1] if "/" in text else []
+        )
         key: str = text.rsplit("/", 1)[-1]
 
         node: dict[str, Any] = self.current
@@ -110,10 +114,13 @@ class DataNavigator:
             )
             if nav:
                 node = nav[0]
+            else:
+                return None
 
         if isinstance(node, dict):
             options: list[str] = [k for k in node.keys() if k.startswith(key)]
-            return options[state] if state < len(options) else None
+            prefix = f"{"/".join(path_prefix)}/" if path_prefix else ""
+            return prefix + options[state] if state < len(options) else None
         return None
 
     def setup_autocomplete(self) -> None:
@@ -137,7 +144,7 @@ class DataNavigator:
         """Process the command during the execution."""
         res = 0
         if cmd[0] == "ls":
-            self.ls(cmd[1] if len(cmd) > 1 else ".")
+            _logger.info(self.ls(cmd[1] if len(cmd) > 1 else "."))
         elif cmd[0] == "cd":
             self.cd(cmd[1] if len(cmd) > 1 else "..")
         elif cmd[0] == "clear":

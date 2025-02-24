@@ -172,4 +172,5 @@ cython_debug/
 
 saves/
 logs/
+app/tests/files/log/
 tree.txt
