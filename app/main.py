@@ -12,7 +12,7 @@ def main(*_, **__) -> int | str | None:
     """Entry point."""
     os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    return read_save("../saves/gamestate", "../logs/data.json")
+    return read_save("../saves/gamestate", "../logs/data2.json")
 
 
 if __name__ == "__main__":

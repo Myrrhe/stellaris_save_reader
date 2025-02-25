@@ -38,20 +38,25 @@ class FileParser:
         """Add a container to the stack."""
         new_container = {}
         if self.curr_key is None:
-            self.turn_dict_to_list(new_container)
+            already_list = not self.turn_dict_to_list(new_container)
+            if already_list:
+                self.stack[-1][1].append(new_container)
         else:
             self.stack[-1][1][self.curr_key] = new_container
         self.stack.append((self.curr_key, new_container))
         self.curr_key = None
 
-    def turn_dict_to_list(self, new_element: str | dict[str, Any]) -> None:
+    def turn_dict_to_list(self, new_element: str | dict[str, Any]) -> bool:
         """Turn a dict into a list."""
         if isinstance(self.stack[-1][1], dict) and not self.stack[-1][1]:
+            # Is dict and is empty
             tmp_key: str | int | None = self.stack[-1][0]
             if tmp_key is None:
                 tmp_key = -1
             self.stack[-2][1][tmp_key] = [new_element]
             self.stack[-1] = (tmp_key, self.stack[-2][1][tmp_key])
+            return True
+        return False
 
     def process_quote(self) -> None:
         """Process the " caracter."""

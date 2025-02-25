@@ -43,7 +43,7 @@ class TestDataNavigator(unittest.TestCase):
         navigator.cd("posts/0")
         self.assertEqual(navigator.ls("."), "Valeur: alpha")
         self.assertEqual(navigator.current, data["posts"][0])
-        navigator.cd("../..")
+        navigator.cd("../../..")
         self.assertEqual(navigator.current, data)
         navigator.cd("posts")
         self.assertEqual(navigator.ls("."), "0  1")

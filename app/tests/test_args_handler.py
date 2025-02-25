@@ -16,6 +16,6 @@ class TestArgsHandler(unittest.TestCase):
         self.assertEqual(
             handler.get_usage(), "usage: execution.py [-h] [file]"
         )
-        self.assertEqual(str(handler), "[file: machin]")
+        self.assertEqual(f"{handler}", "[file: machin]")
         with self.assertRaises(SystemExit):
             ArgsHandler("machin", "truc")
