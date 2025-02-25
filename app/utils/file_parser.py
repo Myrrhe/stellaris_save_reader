@@ -20,30 +20,32 @@ class FileParser:
         self.buffer = []
         self.just_saw_separator = False
 
+    def clear(self) -> None:
+        """Reset the buffer and key."""
+        self.buffer.clear()
+        self.curr_key = None
+
+    def add_element(self, new_element: str | dict[str, Any]) -> None:
+        """Add a new element."""
+        if isinstance(self.stack[-1][1], list):
+            self.stack[-1][1].append(new_element)
+        elif self.curr_key is not None:
+            self.stack[-1][1][self.curr_key] = new_element
+        else:
+            self.turn_dict_to_list(new_element)
+
     def process_word(self) -> None:
         """Process one word."""
         if self.buffer:
-            if isinstance(self.stack[-1][1], list):
-                self.stack[-1][1].append("".join(self.buffer).strip())
-            elif self.curr_key is not None:
-                self.stack[-1][1][self.curr_key] = "".join(self.buffer).strip()
-            else:
-                self.turn_dict_to_list("".join(self.buffer).strip())
-            self.buffer.clear()
-            self.curr_key = None
+            self.add_element("".join(self.buffer).strip())
+            self.clear()
 
     def add_container(self) -> None:
         """Add a container to the stack."""
-        new_container = {}
-        if isinstance(self.stack[-1][1], list):
-            self.stack[-1][1].append(new_container)
-        elif self.curr_key is not None:
-            self.stack[-1][1][self.curr_key] = new_container
-        else:
-            self.turn_dict_to_list(new_container)
-        self.stack.append((self.curr_key, new_container))
-        self.buffer.clear()
-        self.curr_key = None
+        new_element = {}
+        self.add_element(new_element)
+        self.stack.append((self.curr_key, new_element))
+        self.clear()
 
     def turn_dict_to_list(self, new_element: str | dict[str, Any]) -> None:
         """Turn a dict into a list."""
