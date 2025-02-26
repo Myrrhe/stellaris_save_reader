@@ -30,7 +30,13 @@ class FileParser:
         if isinstance(self.stack[-1][1], list):
             self.stack[-1][1].append(new_element)
         elif self.curr_key is not None:
-            self.stack[-1][1][self.curr_key] = new_element
+            if self.curr_key in self.stack[-1][1]:
+                if isinstance(self.stack[-1][1][self.curr_key], list):
+                    self.stack[-1][1][self.curr_key].append(new_element)
+                else:
+                    self.stack[-1][1][self.curr_key] = [self.stack[-1][1][self.curr_key], new_element]
+            else:
+                self.stack[-1][1][self.curr_key] = new_element
         else:
             self.turn_dict_to_list(new_element)
 
@@ -91,6 +97,7 @@ class FileParser:
             while True:
                 # W read one character
                 char = f.read(1)
+
                 # End of file
                 if not char:
                     break
