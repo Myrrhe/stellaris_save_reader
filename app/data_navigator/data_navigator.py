@@ -152,5 +152,5 @@ class DataNavigator:
         elif cmd[0] == "exit" or cmd[0] == "q":
             res = 1
         else:
-            _logger.info("Commandes disponibles: ls, cd <chemin>, exit")
+            _logger.info("Commandes disponibles: ls, cd <chemin>, exit, q")
         return res

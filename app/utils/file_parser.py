@@ -34,7 +34,10 @@ class FileParser:
                 if isinstance(self.stack[-1][1][self.curr_key], list):
                     self.stack[-1][1][self.curr_key].append(new_element)
                 else:
-                    self.stack[-1][1][self.curr_key] = [self.stack[-1][1][self.curr_key], new_element]
+                    self.stack[-1][1][self.curr_key] = [
+                        self.stack[-1][1][self.curr_key],
+                        new_element,
+                    ]
             else:
                 self.stack[-1][1][self.curr_key] = new_element
         else:

@@ -6,13 +6,14 @@ import os
 import sys
 
 from reader.save_reader import read_save
+from config.config import GAMESTATE, LOG_PARSE
 
 
 def main(*_, **__) -> int | str | None:
     """Entry point."""
     os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    return read_save("../saves/gamestate", "../logs/data2.json")
+    return read_save(f"../saves/{GAMESTATE}", f"../logs/{LOG_PARSE}.json")
 
 
 if __name__ == "__main__":
