@@ -31,9 +31,12 @@ class FileParser:
             self.stack[-1][1].append(new_element)
         elif self.curr_key is not None:
             if self.curr_key in self.stack[-1][1]:
+                # The key have already been encountered
                 if isinstance(self.stack[-1][1][self.curr_key], list):
+                    # A list have already been added
                     self.stack[-1][1][self.curr_key].append(new_element)
                 else:
+                    # A list have not yet been added
                     self.stack[-1][1][self.curr_key] = [
                         self.stack[-1][1][self.curr_key],
                         new_element,
