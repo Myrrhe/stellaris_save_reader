@@ -3,6 +3,7 @@
 
 import argparse
 import importlib
+import copy
 import logging
 import pkgutil
 import readline
@@ -153,3 +154,7 @@ class DataNavigator:
         else:
             print(f"Commande inconnue: {command_name}")
             return 0
+
+    def get_copy_root(self) -> dict[str, Any]:
+        """Get a copy a the data."""
+        return copy.deepcopy(self.root)
