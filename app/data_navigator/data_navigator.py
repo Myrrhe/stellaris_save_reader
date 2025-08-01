@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
-""" A class to navigate a data structure. """
+"""A class to navigate a data structure."""
 
+import argparse
+import importlib
 import logging
+import pkgutil
 import readline
 from typing import Any, Optional
+from command import Command
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -16,23 +20,24 @@ class DataNavigator:
         self.current = data
         self.history = []
         self.path = ["/"]
+        self.commands: dict[str, Command] = {}
+        self.load_custom_commands("commands")
+        self.load_custom_commands("custom_commands")
 
-    def ls(self, path: Optional[str] = None) -> str:
-        """Displays dictionary keys or list indices."""
-
-        res = ""
-        navigation: Optional[tuple[Any, list[str], list[dict[str, Any]]]] = (
-            self.navigate_to(path.split("/"))
-        )
-        if navigation:
-            current: str | dict | list = navigation[0]
-            if isinstance(current, dict):
-                res = "  ".join(current.keys())
-            elif isinstance(current, list):
-                res = "  ".join(str(i) for i in range(len(current)))
-            else:
-                res = f"Valeur: {current}"
-        return res
+    def load_custom_commands(self, package_name: str) -> None:
+        """Dynamically imports all commands from the package."""
+        package = importlib.import_module(package_name)
+        for _, modname, _ in pkgutil.iter_modules(package.__path__):
+            module = importlib.import_module(f"{package_name}.{modname}")
+            for attr in dir(module):
+                obj = getattr(module, attr)
+                if (
+                    isinstance(obj, type)
+                    and issubclass(obj, Command)
+                    and obj is not Command
+                ):
+                    instance = obj(self)
+                    self.commands[instance.name] = instance
 
     def get_path(self) -> str:
         """Returns the absolute path as a string."""
@@ -84,21 +89,6 @@ class DataNavigator:
 
         return None if ko else (node, new_path, history_snapshot)
 
-    def cd(self, path: str) -> None:
-        """Change directory in data structure."""
-        nav: Optional[tuple[Any, list[str], list[dict[str, Any]]]] = (
-            self.navigate_to(path.split("/"))
-        )
-        if nav:
-            self.current = nav[0]
-            self.path = nav[1]
-            self.history = nav[2]
-
-    @staticmethod
-    def clear() -> None:
-        """Cleans the console."""
-        _logger.info("\033c")
-
     def complete_path(self, text: str, state: int) -> Optional[list[str]]:
         """Automatically completes key names when typing."""
         path_prefix: list[str] = (
@@ -142,15 +132,24 @@ class DataNavigator:
 
     def process_input(self, cmd: list[str]) -> int:
         """Process the command during the execution."""
-        res = 0
-        if cmd[0] == "ls":
-            _logger.info(self.ls(cmd[1] if len(cmd) > 1 else "."))
-        elif cmd[0] == "cd":
-            self.cd(cmd[1] if len(cmd) > 1 else "..")
-        elif cmd[0] == "clear":
-            self.clear()
-        elif cmd[0] == "exit" or cmd[0] == "q":
-            res = 1
+        if not cmd:
+            return 0
+        command_name = cmd[0]
+        args = cmd[1:]
+
+        if command_name in ("exit", "q"):
+            return 1
+
+        command = self.commands.get(command_name)
+        if command:
+            parser = argparse.ArgumentParser(prog=command_name)
+            command.add_arguments(parser)
+            try:
+                options = parser.parse_args(args)
+                return command.handle(**vars(options))
+            except SystemExit:
+                # argparse calls sys.exit(), which we want to avoid
+                return 0
         else:
-            _logger.info("Commandes disponibles: ls, cd <chemin>, exit, q")
-        return res
+            print(f"Commande inconnue: {command_name}")
+            return 0
