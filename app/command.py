@@ -22,4 +22,4 @@ class Command(ABC):
 
     @abstractmethod
     def handle(self, **options) -> int:
-        """Executes the command with the analyzed options"""
+        """Executes the command with the analyzed options."""

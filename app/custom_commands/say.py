@@ -25,6 +25,7 @@ class SayCommand(Command):
         )
 
     def handle(self, **options) -> int:
+        """Executes the command."""
         message = " ".join(options["message"])
         if options["upper"]:
             message = message.upper()

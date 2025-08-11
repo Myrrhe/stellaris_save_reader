@@ -12,4 +12,5 @@ class ClearCommand(Command):
     name = "clear"
 
     def handle(self, **options) -> int:
+        """Executes the command."""
         _logger.info("\033c")

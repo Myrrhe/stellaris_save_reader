@@ -14,21 +14,17 @@ class DistanceHiveCommand(Command):
     name = "distance_hive"
 
     def handle(self, **options) -> int:
+        """Executes the command."""
         root = self.navigator.get_copy_root()
 
-        id_hive = [
+        last_thought = [
             key
-            for key, value in root["country"].items()
+            for key, value in root["galactic_object"].items()
             if isinstance(value, dict)
-            and value.get("personality") == '"fallen_empire_machine"'
+            and value.get("initializer") == '"fallen_hive_last_thought"'
         ]
 
-        if id_hive:
-            systems_hive = [
-                key
-                for key, value in root["galactic_object"].items()
-                if id_hive[0] in value["starbases"]
-            ]
+        if last_thought:
             id_player = root["player"][0]["country"]
             systems_player = [
                 key
@@ -46,26 +42,23 @@ class DistanceHiveCommand(Command):
             open_list = deque([[systems_player[0]]])
             closed_list = set()
             found_path = []
-            found = False
 
             while open_list:
                 path = open_list.popleft()
-                node = path[-1]
 
-                if node == systems_hive[0]:
-                    found = True
+                if path[-1] == last_thought[0]:
                     found_path = path
                     break
 
-                if node in closed_list:
+                if path[-1] in closed_list:
                     continue
-                closed_list.add(node)
+                closed_list.add(path[-1])
 
-                for voisin in graph.get(node, []):
-                    if voisin not in closed_list:
-                        open_list.append(path + [voisin])
+                for neighbor in graph.get(path[-1], []):
+                    if neighbor not in closed_list:
+                        open_list.append(path + [neighbor])
 
-            if found:
+            if found_path:
                 _logger.info(len(found_path))
             else:
                 _logger.info("Distance non trouvée")

@@ -16,6 +16,7 @@ class LsCommand(Command):
         parser.add_argument("path", nargs="?", default=".", help="Le chemin.")
 
     def handle(self, **options) -> int:
+        """Executes the command."""
         path: str = options.get("path", ".")
 
         res = ""
